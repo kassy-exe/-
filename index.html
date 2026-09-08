@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ねたい実用検定</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D1117;
+    --surface: #161B22;
+    --surface2: #21262D;
+    --blue: #4F9CF9;
+    --gold: #FFD700;
+    --text: #E6EDF3;
+    --muted: #8B949E;
+    --danger: #FF6B6B;
+    --success: #3FB950;
+    --border: #30363D;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    user-select: none;
+  }
+
+  /* ===== TOP PAGE ===== */
+  #top-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .logo {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--gold);
+    margin-bottom: 0.25rem;
+  }
+
+  .logo span { color: var(--blue); }
+
+  .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .grade-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 2.5rem;
+  }
+
+  .grade-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .grade-card:hover {
+    border-color: var(--blue);
+    background: var(--surface2);
+  }
+
+  .grade-card.selected {
+    border-color: var(--gold);
+    background: var(--surface2);
+  }
+
+  .grade-num {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .grade-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+
+  .grade-count {
+    font-size: 0.65rem;
+    color: var(--blue);
+    margin-top: 0.2rem;
+  }
+
+  .name-input-wrap {
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 1.5rem;
+  }
+
+  .name-input-wrap label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .name-input-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .name-input-wrap input:focus {
+    border-color: var(--blue);
+  }
+
+  .start-btn {
+    background: var(--gold);
+    color: #0D1117;
+    border: none;
+    border-radius: 8px;
+    padding: 0.9rem 3rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .start-btn:hover { opacity: 0.85; }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== EXAM PAGE ===== */
+  #exam-page { display: none; }
+
+  .exam-header {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+  }
+
+  .exam-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .exam-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .progress-bar-bg {
+    width: 120px;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .cheat-counter {
+    font-size: 0.75rem;
+    color: var(--danger);
+    font-weight: 700;
+  }
+
+  .cheat-counter.safe { color: var(--muted); }
+
+  /* ===== CHEAT WARNING ===== */
+  #cheat-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(255,107,107,0.15);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #cheat-overlay.show { display: flex; }
+
+  .cheat-modal {
+    background: var(--surface);
+    border: 2px solid var(--danger);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+  }
+
+  .cheat-modal h2 {
+    color: var(--danger);
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .cheat-modal p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .cheat-modal .remaining {
+    font-size: 1.1rem;
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+
+  .cheat-dismiss {
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* ===== QUESTION ===== */
+  .question-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 6rem;
+  }
+
+  .q-number {
+    font-size: 0.75rem;
+    color: var(--blue);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+  }
+
+  .q-type-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.75;
+    margin-bottom: 2rem;
+    color: var(--text);
+  }
+
+  /* 選択問題 */
+  .choices { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .choice-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    background: var(--surface2);
+  }
+
+  .choice-btn.selected {
+    border-color: var(--gold);
+    background: var(--surface2);
+  }
+
+  .choice-label {
+    font-weight: 700;
+    color: var(--gold);
+    min-width: 1.2rem;
+    font-size: 0.85rem;
+    margin-top: 0.05rem;
+  }
+
+  /* 記述問題 */
+  .essay-wrap textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 120px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .essay-wrap textarea:focus {
+    border-color: var(--blue);
+  }
+
+  .essay-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  /* ===== NAV ===== */
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.5rem;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .nav-btn:hover:not(:disabled) { border-color: var(--blue); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .nav-btn.primary {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+    font-weight: 700;
+  }
+
+  .nav-btn.primary:hover:not(:disabled) { opacity: 0.85; }
+
+  .nav-btn.submit {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0D1117;
+    font-weight: 700;
+  }
+
+  /* ===== RESULT PAGE ===== */
+  #result-page {
+    display: none;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+  }
+
+  .result-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .result-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .result-grade {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-name {
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  .result-score-wrap {
+    margin-bottom: 1rem;
+  }
+
+  .result-score {
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .result-score span {
+    font-size: 1.5rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .result-verdict {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 0.75rem;
+  }
+
+  .result-verdict { color: var(--muted); }
+  .result-verdict.pass { color: var(--success); }
+  .result-verdict.fail { color: var(--danger); }
+
+  .cheat-warning-result {
+    background: rgba(255,107,107,0.1);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: var(--danger);
+    margin-top: 1rem;
+  }
+
+  .review-section { margin-top: 2rem; }
+
+  .review-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .review-item.correct { border-left: 3px solid var(--success); }
+  .review-item.wrong { border-left: 3px solid var(--danger); }
+  .review-item.essay { border-left: 3px solid var(--blue); }
+
+  .review-q-num {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .review-q-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .review-answer-row {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .review-your {
+    color: var(--danger);
+  }
+
+  .review-your.ok { color: var(--success); }
+
+  .review-correct-ans {
+    color: var(--success);
+  }
+
+  .review-essay-ans {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .retry-btn {
+    display: block;
+    margin: 2.5rem auto 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 2.5rem;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .retry-btn:hover { border-color: var(--blue); }
+
+  /* ===== TERMINATED PAGE ===== */
+  #terminated-page {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    flex-direction: column;
+  }
+
+  .terminated-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .terminated-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--danger);
+    margin-bottom: 0.75rem;
+  }
+
+  .terminated-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    max-width: 340px;
+    margin-bottom: 2rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP PAGE -->
+<div id="top-page">
+  <div class="logo">ねたい<span>検定</span></div>
+  <div class="subtitle">実用ねたい力検定</div>
+
+  <div class="grade-grid">
+    <div class="grade-card" onclick="selectGrade(5)">
+      <div class="grade-num">5</div>
+      <div class="grade-label">級</div>
+      <div class="grade-count">20問</div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(4)">
+      <div class="grade-num">4</div>
+      <div class="grade-label">級</div>
+      <div class="grade-count">25問</div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(3)">
+      <div class="grade-num">3</div>
+      <div class="grade-label">級</div>
+      <div class="grade-count">30問</div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(2)">
+      <div class="grade-num">2</div>
+      <div class="grade-label">級</div>
+      <div class="grade-count">35問</div>
+    </div>
+    <div class="grade-card" onclick="selectGrade(1)">
+      <div class="grade-num">1</div>
+      <div class="grade-label">級</div>
+      <div class="grade-count">40問</div>
+    </div>
+  </div>
+
+  <div class="name-input-wrap">
+    <label>名前を入力してください</label>
+    <input type="text" id="name-input" placeholder="例：かっしー" oninput="updateStartBtn()">
+    <div style="font-size:0.72rem;color:var(--danger);margin-top:0.4rem;">※ 誰だか認識できる名前でないと無効となります</div>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="startExam()" disabled>検定を開始する</button>
+</div>
+
+<!-- EXAM PAGE -->
+<div id="exam-page">
+  <div class="exam-header">
+    <div class="exam-title" id="exam-title-label">ねたい検定 〇級</div>
+    <div class="exam-meta">
+      <div class="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-text" id="progress-text">1 / 20</div>
+      </div>
+      <div class="cheat-counter safe" id="cheat-counter">離脱: 0/3</div>
+    </div>
+  </div>
+
+  <div class="question-wrap" id="question-wrap"></div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" id="prev-btn" onclick="prevQ()" disabled>← 前へ</button>
+    <button class="nav-btn primary" id="next-btn" onclick="nextQ()">次へ →</button>
+    <button class="nav-btn submit" id="submit-btn" onclick="submitExam()" style="display:none">提出する</button>
+  </div>
+</div>
+
+<!-- CHEAT OVERLAY -->
+<div id="cheat-overlay">
+  <div class="cheat-modal">
+    <h2>⚠️ 離脱を検知</h2>
+    <p>別のタブやウィンドウへの切り替えを検知しました。<br>これはカンニング行為とみなされます。</p>
+    <div class="remaining" id="cheat-remaining">残り警告: 2回</div>
+    <button class="cheat-dismiss" onclick="dismissCheat()">試験に戻る</button>
+  </div>
+</div>
+
+<!-- RESULT PAGE -->
+<div id="result-page">
+  <div class="result-inner">
+    <div class="result-header">
+      <div class="result-grade" id="result-grade-label"></div>
+      <div class="result-name" id="result-name-label"></div>
+      <div class="result-score-wrap">
+        <div class="result-score" id="result-score">0<span> / 100</span></div>
+      </div>
+      <div class="result-verdict" id="result-verdict"></div>
+      <div class="cheat-warning-result" id="cheat-warning-result" style="display:none"></div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">問題の振り返り</div>
+      <div id="review-list"></div>
+    </div>
+
+    <button class="retry-btn" onclick="backToTop()">トップに戻る</button>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="admin-page" style="display:none; min-height:100vh; padding:2rem 1.5rem;">
+  <div style="max-width:780px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;border-bottom:1px solid var(--border);padding-bottom:1rem;">
+      <div style="font-size:1.1rem;font-weight:700;color:var(--gold);">管理者画面 — 受験一覧</div>
+      <button class="nav-btn" onclick="closeAdmin()">← 戻る</button>
+    </div>
+    <div id="admin-list"></div>
+  </div>
+</div>
+
+<!-- TERMINATED PAGE -->
+<div id="terminated-page" style="display:flex; display:none;">
+  <div class="terminated-icon">🚫</div>
+  <div class="terminated-title">試験を強制終了しました</div>
+  <div class="terminated-desc">
+    タブ・ウィンドウの離脱が3回検知されたため、<br>
+    この試験は無効となりました。<br>
+    最初からやり直してください。
+  </div>
+  <button class="retry-btn" onclick="backToTop()">トップに戻る</button>
+</div>
+
+<script>
+// ===== 問題データ =====
+const QUESTIONS = {
+  5: [
+    { type:'choice', text:'ねたいの最初のリーダーは誰？', choices:['かっしー','しゅうと','古賀','稲場'], answer:2 },
+    { type:'choice', text:'ねたい史上初めてできた会社は？', choices:['かっしー銀行','稲場商事','OI銀行','古賀クリーン'], answer:3 },
+    { type:'choice', text:'ねたいで最初に使われた通貨の名前は？', choices:['パト','ケン','トキ','円'], answer:2 },
+    { type:'choice', text:'トキはもともと何に使われていた？', choices:['給料の支払い','車両予想の賭け','会社間の取引','税金の支払い'], answer:1 },
+    { type:'choice', text:'トキを最初に通貨として提案したのは？', choices:['かっしー','稲場','生田','古賀'], answer:3 },
+    { type:'choice', text:'トキの管理をしていた銀行は？', choices:['OI銀行','かっしー銀行','しゅうと銀行','SK銀行'], answer:1 },
+    { type:'choice', text:'サボり隊が使っていた通貨の名前は？', choices:['トキ','パト','ケン','円'], answer:2 },
+    { type:'choice', text:'サボり隊の通貨を発行していた銀行は？', choices:['かっしー銀行','OI銀行','しゅうと銀行','古賀銀行'], answer:2 },
+    { type:'choice', text:'サボり隊の通貨の弱点は？', choices:['重すぎて持ち運べない','紙製でコピーによる偽造がしやすい','価値が低すぎた','使える場所が少なかった'], answer:1 },
+    { type:'choice', text:'トキが禁止されるきっかけになった出来事は？', choices:['偽造が発覚した','3組の先生に見つかった','かっしー銀行が倒産した','しゅうとが持ち逃げした'], answer:1 },
+    { type:'choice', text:'トキが禁止された後に作られた通貨は？', choices:['ケン','円','パト','新トキ'], answer:2 },
+    { type:'choice', text:'パトを作ったのはどの2つの銀行？', choices:['かっしー銀行とSK銀行','OI銀行としゅうと銀行','かっしー銀行とOI銀行','SK銀行とOI銀行'], answer:2 },
+    { type:'choice', text:'ねたいのルール違反をした場合の罰則は？', choices:['ねたいから追放','罰金を請求される','罰ゲームをする','リーダーに謝る'], answer:1 },
+    { type:'choice', text:'警察官がルール違反をした場合の処分は？', choices:['罰金のみ','追放のみ','罰金＋警察退職','一般会員と同じ罰金'], answer:2 },
+    { type:'choice', text:'サボり隊を結成したのは誰？', choices:['生田','しゅうと','岡野','目﨑'], answer:1 },
+    { type:'choice', text:'ねたいとサボり隊が一時合体した時のグループ名は？', choices:['ねたいα','だらだらたい','連合隊','合体隊'], answer:1 },
+    { type:'choice', text:'ねたいの最終目標として正しいのは？', choices:['本物の会社を作ること','学校でのエンタメ役になること','全クラスに広めること','先生に認めてもらうこと'], answer:1 },
+    { type:'choice', text:'ねたい内の法律や会社リストを管理しているファイルは？', choices:['ねたいDoc','ねたいシート','ねたい.xlsm','ねたいForm'], answer:2 },
+    { type:'choice', text:'現在のねたいの経済で特に重視されている活動は？', choices:['娯楽活動','経済活動','広報活動','技術開発'], answer:1 },
+    { type:'choice', text:'現在のトキの取引ルールとして正しいのは？', choices:['デジタルでのみ取引する','かっしーを通じて取引する','先生に見つからないようにこっそり交換する','授業中でも自由に取引できる'], answer:2 },
+  ],
+  4: [
+    { type:'choice', text:'現在も存在する会社の中で最初にできたのは？', choices:['古賀クリーン','OI銀行','かっしー銀行','稲場商事'], answer:2 },
+    { type:'choice', text:'古賀クリーンが設立された理由として最も適切なのは？', choices:['給料を稼ぐため掃除サービスを始めた','「どうやってトキを稼ぐか」という議論から生まれた','古賀がリーダーになったことを記念した','OI銀行の要請で設立された'], answer:1 },
+    { type:'choice', text:'トキとケンの両替をしていた会社は？', choices:['かっしー銀行','OI銀行','稲場商事','SK銀行'], answer:2 },
+    { type:'choice', text:'ねたいで最初に合併した2つの会社の組み合わせは？', choices:['かっしー銀行とOI銀行','稲場商事とMMしょうじ','古賀クリーンと稲場商事','かっしー銀行としゅうと銀行'], answer:1 },
+    { type:'choice', text:'かっしー銀行としゅうと銀行が合併してできた銀行の名前は？', choices:['かっしみ銀行','かっしゅう銀行','KS銀行','統合銀行'], answer:0 },
+    { type:'choice', text:'第二トキケン時代に関して正しいのは？', choices:['ねたいとサボり隊が完全に統合された','サボり隊の合体提案をねたいが受け入れ、グループ名をねたいに統一した','しゅうとがリーダーになった','パトが主要通貨になった'], answer:1 },
+    { type:'choice', text:'一日同盟が崩壊した原因は？', choices:['しゅうとが再び怒り出した','先生に見つかったため','先生の机という領土の奪い合いが発生した','通貨問題で対立した'], answer:2 },
+    { type:'choice', text:'ねたいαが結成された理由として正しいのは？', choices:['かっしーが新しい組織を作りたかった','古賀の独裁的・共産的な運営に反発した優秀なメンバーが秘密裏に結成した','サボり隊に対抗するために結成した','先生の指示で別組織を作った'], answer:1 },
+    { type:'choice', text:'現在のねたいの運営を引き継いだのは誰？', choices:['稲場','生田','古賀','かっしー'], answer:3 },
+    { type:'choice', text:'稲場グループの経営方針として正しいのは？', choices:['トップダウンの独裁経営','全員が提案し投票で物事を決める民主主義経営','利益最優先の資本主義経営','かっしーの指示に従う経営'], answer:1 },
+    { type:'choice', text:'今橋グループのキャッチコピーは？', choices:['「利益第一のグループ」','「技術で未来を切り開く」','「私語のある緊張感のないグループ」','「全員参加の民主グループ」'], answer:2 },
+    { type:'choice', text:'OIグループの創設メンバーは？', choices:['岡野と稲場','生田と今橋','岡野と生田','かっしーと岡野'], answer:2 },
+    { type:'choice', text:'ねたいで初めてできた会話アプリは？', choices:['Kasssocial','かっしゃべる','Kassy Talk','かっしー会話'], answer:2 },
+    { type:'choice', text:'軍隊（自称ねたい）が取った行動として正しいのは？', choices:['かっしーに直接交渉した','先生への告発によってねたいの壊滅を狙った','通貨を偽造してねたい経済を混乱させた','サボり隊と同盟を結んだ'], answer:1 },
+    { type:'choice', text:'軍隊の告発に対してねたい側が取った対応は？', choices:['先生に謝罪した','軍隊と交渉した','サイトを一時閉鎖した','かっしーが学校を休んだ'], answer:2 },
+    { type:'choice', text:'ねたいの歴史上存在した給料日として含まれないものはどれ？', choices:['月曜日','水曜日','金曜日','休日'], answer:1 },
+    { type:'choice', text:'現在のトキが再び流通し始めた理由として最も適切なのは？', choices:['パトの価値が下がったから','経済の停滞（デフレ）を解消するため','先生が許可したから','かっしーが指示したから'], answer:1 },
+    { type:'choice', text:'トキを実物で手渡しすることの利点として挙げられているのは？', choices:['偽造されにくい','先生に見つかりにくい','デジタルより取引が楽しいと感じやすい','計算が簡単になる'], answer:2 },
+    { type:'choice', text:'ねたいの技術者が現在何人いるか？', choices:['1人','2人','5人','10人'], answer:1 },
+    { type:'choice', text:'Kassy Groupに含まれない組織はどれ？', choices:['かっしーゲーム','フリマっしー','OI娯楽','かっしー保険'], answer:2 },
+    { type:'essay', text:'稲場商事はねたいが最初にできてから何日後に設立された？', answer:'1日後' },
+    { type:'essay', text:'一日同盟とは何か、簡単に説明せよ', answer:'ねたいとサボり隊の4人のリーダー・副リーダーが対立解消のために協定書にサインした同盟（翌日崩壊）' },
+    { type:'essay', text:'トキ崩壊事件とは何か、簡単に説明せよ', answer:'3組の先生にトキが見つかり、説教を受けた結果トキが禁止になった出来事' },
+    { type:'essay', text:'ねたいの法廷ルールが書かれているファイルの名前を答えよ', answer:'ねたい.xlsm' },
+    { type:'essay', text:'現在のトキの取引で設けられているルールを答えよ', answer:'先生に見つからないようにこっそり交換する' },
+  ],
+  3: [
+    { type:'choice', text:'警察官が犯罪をした場合の処分として正しいのは？', choices:['一般会員と同じ罰金のみ','ねたいから追放','罰金＋警察退職','罰金＋すべての会社をクビ'], answer:2 },
+    { type:'choice', text:'警察官への処分が一般会員より重い理由として最も適切なのは？', choices:['警察官は活動量が多いから','権限を持つ立場の不正は影響が大きいから','昔からそう決まっているから','人数を減らしたいから'], answer:1 },
+    { type:'choice', text:'ねたいαが結成された後、古賀はどうなった？', choices:['ねたいαのリーダーになった','ねたいから追放された','権利を放棄しかっしーに運営を譲った','サボり隊に合流した'], answer:2 },
+    { type:'choice', text:'稲場商事の「反サボり広告」はどのような活動か？', choices:['サボり隊に対する経済制裁','稲場商事印刷課によるプロパガンダ活動','ねたい公式ソングの宣伝活動','新会員募集のための広告'], answer:1 },
+    { type:'choice', text:'現在のトキが再流通した背景として正しいのは？', choices:['パトが偽造されたため','先生が許可したため','6年生進学後の経済停滞を解消するため','かっしー銀行が新たに発行したため'], answer:2 },
+    { type:'choice', text:'ねたいの国庫について正しいのは？', choices:['国庫は無限に補充される','国庫は有限で、やりくりが必要','国庫は各グループが管理している','国庫はかっしー銀行が管理している'], answer:1 },
+    { type:'choice', text:'ねたいが国庫を補うために導入した制度は？', choices:['新通貨の発行','会社への融資制度','租税制度','国庫の借入制度'], answer:2 },
+    { type:'choice', text:'ねたいが目指す経済の方向性として正しいのは？', choices:['国庫から無限に給料を出す','自分たちで金を稼ぎそこから給料を出す仕組みに近づける','外部から資金を調達する','全員の給料を一律にする'], answer:1 },
+    { type:'choice', text:'現在、会社が自分で稼いで給料を払う制度は採用されているか？', choices:['全会社で採用されている','一部の会社で採用されている','まだ採用されていない','かっしーグループのみ採用されている'], answer:2 },
+    { type:'choice', text:'ねたいが物の価値を下げることで狙っている効果は？', choices:['取引量を増やす','相対的に金の価値を上げる','新人を増やす','国庫の支出を減らす'], answer:1 },
+    { type:'choice', text:'旧人とはどのような人を指すか？', choices:['ねたいを卒業した人','改革実施前からねたいに入っている人','5級以上の検定を持つ人','かっしーグループに所属している人'], answer:1 },
+    { type:'choice', text:'ねたいの技術者不足によって生じる問題として正しいのは？', choices:['経済活動が止まる','負担が大きく作業に時間がかかる','新人が増えない','国庫が減る'], answer:1 },
+    { type:'choice', text:'ねたいで初めてできたゲーム企業は？', choices:['かっしーゲーム','OI娯楽','ねましょうじ','平田グループ'], answer:2 },
+    { type:'choice', text:'ねたいのポータルサイトに設置されている司法機能は？', choices:['警察署','裁判所','検察庁','法務局'], answer:1 },
+    { type:'choice', text:'Kassy Groupの目標として正しいのは？', choices:['ねたい内で最大の会社グループになること','最新技術による業務効率化と新サービス開発で業界リーダーになること','全参加者の給料を管理すること','ねたいの法律を整備すること'], answer:1 },
+    { type:'choice', text:'OI娯楽に含まれる課として正しい組み合わせは？', choices:['印刷課と販売課','ギャンブル課とその他課','ゲーミング課とクイズ作成課','情報課とニュース課'], answer:1 },
+    { type:'choice', text:'稲場グループの目標として正しいのは？', choices:['ねたい内の治安維持','経営・管理のデジタル化による企業発展と新市場の開拓','最新技術の開発','ねたいのエンタメ活動の充実'], answer:1 },
+    { type:'choice', text:'ねたいの経済活動を活発にする計画で挙げられていない施策は？', choices:['新人への給付金','新会社への「アクセル役」の給付金','人を増やす','税金を廃止する'], answer:3 },
+    { type:'choice', text:'トキをデジタル管理していた時代の取引手順として正しいのは？', choices:['当事者同士で直接取引できた','かっしーに依頼してシステムを操作してもらう必要があった','OI銀行を通じて取引した','ねたい.xlsmに自分で記入した'], answer:1 },
+    { type:'choice', text:'ねたいの検定で避けるべきこととして明記されているのは？', choices:['難しすぎる問題を出すこと','同じ内容を別の言い方で何度も聞くこと','記述問題を多くすること','選択肢を4つにすること'], answer:1 },
+    { type:'essay', text:'ねたいが「学校でのエンタメ役」を目指している理由を簡潔に説明せよ', answer:'単なる経済活動の集まりではなく、学校内で楽しめるコンテンツ・サービス・活動を提供する存在になることが最終目標だから' },
+    { type:'essay', text:'パトが短期間で使用禁止になった理由を答えよ', answer:'先生からの指導を恐れたため' },
+    { type:'essay', text:'ねたいで初めて合併した2つの会社を答えよ', answer:'稲場商事とMMしょうじ' },
+    { type:'essay', text:'一日同盟が崩壊した原因を答えよ', answer:'先生の机という「領土」の奪い合いが発生したため' },
+    { type:'essay', text:'トキ崩壊事件で苦しい言い逃れとして使われた言葉を答えよ', answer:'人助けグループの輪ゴム' },
+    { type:'essay', text:'トキの現物化によって生まれる「楽しさのループ」を説明せよ', answer:'実物のトキを手渡すことで取引の楽しさを体験させ、その楽しさを知った参加者が他の人を誘い、参加者が増えてさらに経済活動が活発になるループ' },
+    { type:'essay', text:'現在のねたいで稼働している技術者は何人か答えよ', answer:'2人' },
+    { type:'essay', text:'軍隊（自称ねたい）が結成されたきっかけを答えよ', answer:'生田がルール違反を指摘されてねたいを離脱したため' },
+    { type:'essay', text:'新人を増やすためにどのような施策が有効か、ねたいの仕組みを踏まえて具体的に答えよ（高配点）', answer:'新人への給付金制度を整備し、経済活動の楽しさを体験させることで口コミによる参加者増加につなげる。また技術者を増やしてシステムの利便性を高めることも有効。' },
+    { type:'essay', text:'ねたいが学校のエンタメ役になるために、どのような新しい仕組みやイベントを導入するべきか、具体的かつ実現可能な案を答えよ（高配点）', answer:'ねたい内でのフリマイベントや、ねたいギネス記録への挑戦企画など、参加者が楽しめる経済イベントを定期開催する。ポータルサイトのコンテンツを増やし非参加者にも魅力を伝える。' },
+  ],
+  2: [
+    { type:'choice', text:'活動していない会社が長期間放置されている場合、最も適切な対応はどれ？', choices:['すぐに強制解散させる','警告を出し、改善がなければ解散を検討する','国庫から支援金を出して活性化させる','他のグループに吸収合併させる'], answer:1 },
+    { type:'choice', text:'新しい法律を制定する際に最も注意すべきことはどれ？', choices:['できるだけ多くの罰則を設ける','リーダーの意向を最優先にする','既存の法律との矛盾がなく運用できるか確認する','参加者全員の賛成を得る'], answer:2 },
+    { type:'choice', text:'警察に過度な権限を与えすぎると生じる問題として最も適切なのは？', choices:['国庫の支出が増える','不当な罰則を受けるリスクが高まる','技術者の負担が増える','新人が増えなくなる'], answer:1 },
+    { type:'choice', text:'ねたいの経済がデフレ状態だった時期に取られた対策として正しいのは？', choices:['新通貨を発行した','国庫から大量に給付金を配った','トキの現物化で取引の活性化を図った','会社の数を減らして競争を抑制した'], answer:2 },
+    { type:'choice', text:'ねたいの国庫が不足した場合、最も現実的な対応として挙げられているのは？', choices:['新通貨を発行して補う','租税制度を活用して補う','各グループに強制的に拠出させる','国庫の概念を廃止する'], answer:1 },
+    { type:'choice', text:'ねたいで初めて追放された人物は？', choices:['しゅうと','岡野','目﨑','生田'], answer:2 },
+    { type:'choice', text:'かっしーグループに含まれない組織はどれ？', choices:['かっしー製作所','フリマっしー','OI娯楽','かっしー保険'], answer:2 },
+    { type:'choice', text:'一番最初にできた会社またはグループのホームページは？', choices:['OIグループ','稲場グループ','かっしーグループ','今橋グループ'], answer:2 },
+    { type:'choice', text:'サボり隊の500ケンの形は？', choices:['正三角形','正方形','長方形','円'], answer:3 },
+    { type:'choice', text:'ねたいで一番長く続いた会社は？', choices:['古賀クリーン','OI銀行','かっしー銀行','稲場商事'], answer:2 },
+    { type:'choice', text:'技術者不足を解消するために最も効果的な対策はどれ？', choices:['技術者の給料を下げてコストを削減する','技術者を増やして負担を分散し作業時間を短縮する','システムの機能を減らして管理を簡略化する','かっしーが全ての作業を一人で引き受ける'], answer:1 },
+    { type:'choice', text:'「取引したい→かっしーに依頼→システム操作」という手順が問題だった理由として最も適切なのは？', choices:['かっしーへの依頼が多すぎて国庫が減った','取引のハードルが高く経済活動が停滞した','システムが頻繁にエラーを起こした','かっしーが依頼を断ることがあった'], answer:1 },
+    { type:'choice', text:'ねたいが「学校でのエンタメ役」を目指す上で最も重要な要素はどれ？', choices:['参加者全員が給料を増やすこと','非参加者も楽しめるコンテンツを提供すること','先生に活動を認めてもらうこと','国庫を最大化すること'], answer:1 },
+    { type:'choice', text:'旧人と新人の購買力格差が生じた場合の問題として最も適切なのは？', choices:['新人が増えすぎる','旧人と新人の購買力に格差が生まれる','国庫が急激に減少する','技術者の負担が増える'], answer:1 },
+    { type:'choice', text:'ねたいの法廷ルールの目的として最も適切なのは？', choices:['リーダーの権限を強化する','紛争を公正に解決し秩序を維持する','罰金収入を国庫に充てる','警察の活動を制限する'], answer:1 },
+    { type:'choice', text:'稲場グループの「全員投票による意思決定」の利点として最も適切なのは？', choices:['意思決定が速くなる','リーダーの負担が減る','参加者全員が当事者意識を持ちやすい','反対意見が出にくくなる'], answer:2 },
+    { type:'choice', text:'ねたいの歴史において古賀の運営が「独裁的・共産的」と評された理由として最も適切なのは？', choices:['古賀が全ての通貨を管理していたから','他のメンバーの意見が反映されにくかったから','古賀がサボり隊と秘密裏に交渉していたから','古賀が国庫を私的に使用していたから'], answer:1 },
+    { type:'choice', text:'ねたいで公共事業の費用を負担するのはどこか？', choices:['各グループが均等に負担する','国庫から支出する','かっしー銀行が負担する','参加者全員から徴収する'], answer:1 },
+    { type:'choice', text:'ねたいの検定で2級以降の選択問題として目指している構成はどれ？', choices:['明らかな正解が一つある問題','複数の選択肢がそれっぽく見えるが、よく考えると一つだけ最も適切な問題','全ての選択肢が正解になりうる問題','知識だけで即答できる問題'], answer:1 },
+    { type:'choice', text:'ねたいの経済を現実に近づける計画において、まだ実現していないことはどれ？', choices:['租税制度の導入','トキの現物化','会社が自分で稼いで給料を払う制度','裁判所の設置'], answer:2 },
+    { type:'essay', text:'ねたいで旧人と新人の給料に差がある場合、どのような経済的問題が生じるか答えよ', answer:'購買力に格差が生まれ、新人が経済活動に参加しにくくなる。結果として取引が活性化せず経済が停滞するリスクがある' },
+    { type:'essay', text:'ねたいの国庫が有限であることを踏まえ、公共事業を継続するために必要な仕組みを答えよ', answer:'租税制度を活用して国庫を安定的に補充しながら、支出の優先順位を決めて効率的に運用する必要がある' },
+    { type:'essay', text:'技術者が2人しかいない状況でシステム管理を続けることのリスクを答えよ', answer:'負担が集中して作業が遅延するだけでなく、どちらか一人が抜けた場合にシステム全体が機能不全に陥るリスクがある' },
+    { type:'essay', text:'ねたいの法律に違反した警察官への処分が一般会員より重い理由を、制度の観点から説明せよ', answer:'法を執行する立場の人間が違反することは一般会員より社会的影響が大きく、制度への信頼を損なうため、より重い処分によって抑止力を高める必要がある' },
+    { type:'essay', text:'活動していない会社が長期間放置されている場合、どのように対応するべきか答えよ', answer:'社長に警告を出し、一定期間経過しても改善が見られない場合は解散を検討する。ただし強制解散は最終手段とし、まず当事者への働きかけを優先する' },
+    { type:'essay', text:'一日同盟が長続きするには何が必要だったか答えよ', answer:'領土などの具体的な争点についても事前に合意内容を明確化し、曖昧な部分を残さないことが必要だった' },
+    { type:'essay', text:'新しい法律を作る際に注意すべき点を2つ答えよ', answer:'既存の法律と矛盾しないこと、実際の運用場面を想定して実行可能かどうか確認すること' },
+    { type:'essay', text:'警察に権限を与えすぎるとどのような問題が生じるか答えよ', answer:'権力の乱用が起きやすくなり、一般会員が不当な罰則を受けるリスクが高まる。また警察への信頼が失われ、秩序維持機能が低下する可能性がある' },
+    { type:'essay', text:'ねたいの経済活動において「楽しさのループ」をどのように機能させるか説明せよ', answer:'トキの現物化により取引の楽しさを体験させ、その楽しさを知った参加者が他の人を誘うことで参加者が増え、さらに経済活動が活発になるループを生み出す' },
+    { type:'essay', text:'稲場グループの経営方針を答えよ', answer:'全員が提案し、投票で物事を決める民主主義経営' },
+    { type:'essay', text:'ねたいのポータルサイトに設置されているコミュニケーションツールの名前を答えよ', answer:'かっしゃべる' },
+    { type:'essay', text:'ねたいの技術者が現在何人か答えよ', answer:'2人' },
+    { type:'essay', text:'ねたいの経済を現実に近づけるために今後導入すべき仕組みを、現状の問題点を踏まえて具体的に答えよ（高配点）', answer:'現在は国庫から給料が支出されているが、会社が自ら稼いで給料を払う制度がまだない。今後は各会社が収益を上げる仕組みを整備し、国庫への依存を減らすことが必要。また租税制度を活用して国庫を安定的に補充することも重要' },
+    { type:'essay', text:'ねたいが長期的に発展するために必要な組織的課題を2つ挙げ、それぞれの改善策を答えよ（高配点）', answer:'①技術者不足→技術者を育成・増員して負担を分散する ②経済停滞→トキ現物化や給付金制度で取引を活性化し参加者を増やす' },
+  ],
+  1: [
+    { type:'choice', text:'サボり隊の副リーダーは？', choices:['しゅうと','目﨑','生田','岡野'], answer:2 },
+    { type:'choice', text:'稲場商事が最初にできた時の課の数は？', choices:['6','4','2','3'], answer:3 },
+    { type:'choice', text:'ねたいで初めてできた部の名前は？', choices:['ねたい経済部','ねたい管理部','ねたい警察部','ねたい技術部'], answer:1 },
+    { type:'choice', text:'OIグループのホームページができたのはいつ？', choices:['2025年2月25日','2025年4月1日','2025年3月25日','2025年3月15日'], answer:2 },
+    { type:'choice', text:'ねたいがデフレを意図的に起こす目的として最も適切なのは？', choices:['取引量を増やすため','国庫の資金で経済を運営しやすくするため','新人の購買力を上げるため','会社の収益を安定させるため'], answer:1 },
+    { type:'choice', text:'租税制度を導入した場合のトレードオフとして最も適切なのは？', choices:['国庫が増えるが技術者の負担が増える','新人が増えるが旧人の給料が下がる','国庫が安定するが参加者の消費が落ちる可能性がある','経済が活性化するが警察の仕事が増える'], answer:2 },
+    { type:'choice', text:'「会社が自分で稼いで給料を払う制度」を導入した場合の最大のリスクはどれ？', choices:['技術者の負担が増える','稼げない会社の参加者が給料を受け取れず離脱するリスク','リーダーの権限が弱まる','国庫が枯渇する'], answer:1 },
+    { type:'choice', text:'警察官への処分を一般会員より重くする制度上の意義として最も適切なのは？', choices:['罰金収入を増やすため','一般会員の不満を抑えるため','警察官の活動量が多いため負担を均等にするため','執行側への信頼を維持し抑止力を高めるため'], answer:3 },
+    { type:'choice', text:'古賀クリーンが「史上初の会社」として記録される理由として最も適切なのは？', choices:['古賀クリーンが最も利益を上げたから','設立の経緯がねたいの経済活動の原点だから','古賀クリーンがねたいの法律を制定したから','古賀クリーンが現在も活動しているから'], answer:1 },
+    { type:'choice', text:'「楽しさのループ」が機能しない場合の最も根本的な原因はどれ？', choices:['国庫が不足している','参加者の給料が低い','技術者が足りない','取引のハードルが高く楽しさを体験できる機会がない'], answer:3 },
+    { type:'choice', text:'組織間の協定を長続きさせるために最も重要な要素はどれ？', choices:['罰則を設けること','第三者の仲裁者を置くこと','争点を事前に明確化し合意内容を文書化すること','リーダー同士の個人的な信頼関係'], answer:2 },
+    { type:'choice', text:'ねたいがサイトを一時閉鎖した目的として最も適切なのは？', choices:['トキ崩壊事件への対応のため','軍隊による先生への告発からねたいを守るため','ねたいαの結成を隠すため','システムのメンテナンスのため'], answer:1 },
+    { type:'choice', text:'稲場グループの民主主義経営の弱点として最も適切なのはどれ？', choices:['参加者の意見が反映されない','国庫への依存度が高まる','意思決定に時間がかかり緊急時の対応が遅れる可能性がある','リーダーの負担が大きくなる'], answer:2 },
+    { type:'choice', text:'旧人と新人の購買力格差を解消するための最も効果的な方法はどれ？', choices:['旧人の給料を下げる','新人への給付金制度で段階的に購買力を引き上げる','全員の給料を一律にする','新通貨を発行する'], answer:1 },
+    { type:'choice', text:'技術者が1人になった場合の最も深刻なリスクはどれ？', choices:['新人の受け入れができなくなる','給料の支払いが遅れる','システム全体が機能不全に陥る可能性がある','国庫の管理ができなくなる'], answer:2 },
+    { type:'choice', text:'ねたいがデフレを起こす方法として挙げられているのはどれ？', choices:['トキの流通量を減らす','ねたい内で物の価値を下げる','国庫への歳入を増やす','会社の数を増やす'], answer:1 },
+    { type:'choice', text:'ねたいが「学校でのエンタメ役」になるために最も避けるべき状況はどれ？', choices:['先生に活動が知られること','経済活動が活発になりすぎること','参加者が増えすぎること','活動が参加者だけの閉じたコミュニティになること'], answer:3 },
+    { type:'choice', text:'ねたいの法廷制度が機能するための前提条件として最も適切なのはどれ？', choices:['罰金が高額であること','法律が明確で誰もが理解できる内容であること','リーダーが裁判を監督すること','全参加者が法律を暗記していること'], answer:1 },
+    { type:'choice', text:'「一日同盟」の失敗を現在の制度設計に活かすとすれば最も適切なのはどれ？', choices:['同盟期間を最初から短く設定する','同盟を結ぶ際はリーダーだけでなく全員が署名する','合意内容に具体的な争点の解決策まで含める','第三者の仲裁者を置く'], answer:2 },
+    { type:'choice', text:'公共事業と民間会社の役割分担として最も適切なのはどれ？', choices:['全ての事業を国庫で賄う','公共事業は国庫、民間会社は自らの収益で運営する方向を目指す','国庫は緊急時のみ使用する','民間会社が公共事業も担当する'], answer:1 },
+    { type:'essay', text:'ねたいの経済においてデフレとインフレの違いを説明し、ねたいがデフレを選択した理由を答えよ', answer:'デフレは物の価値が下がり金の価値が上がる状態、インフレはその逆。ねたいは国庫が有限であるため、金の価値を相対的に高めて限られた資金で経済を運営しやすくするためにデフレを選択した' },
+    { type:'essay', text:'租税制度の導入によって生じるトレードオフを説明せよ', answer:'国庫が安定して補充される一方、参加者の手元のトキが減ることで消費活動が落ち込み経済が停滞するリスクがある。国庫の安定と経済活性化のバランスを取ることが重要' },
+    { type:'essay', text:'会社が自分で稼いで給料を払う制度を導入する場合、どのような問題が生じる可能性があるか答えよ', answer:'稼げない会社の参加者が給料を受け取れなくなり離脱するリスクがある。また会社間の収益格差が拡大し、経済的不平等が生まれる可能性もある' },
+    { type:'essay', text:'ねたいの警察制度において権力乱用を防ぐための仕組みを説明せよ', answer:'警察官自身が違反した場合は罰金に加えて警察退職という重い処分を設けることで抑止力を高めている。また裁判所による司法チェックも機能している' },
+    { type:'essay', text:'ねたいの技術者不足を解消するための具体的な施策を2つ答えよ', answer:'①技術に興味のある参加者をスカウト・育成して技術者を増やす ②システムの一部を自動化・簡略化して1人あたりの作業量を減らす' },
+    { type:'essay', text:'稲場グループの民主主義経営とKassy Groupのトップダウン経営のそれぞれの長所と短所を比較せよ', answer:'民主主義経営は参加者全員が当事者意識を持てるが意思決定に時間がかかる。トップダウンは迅速な決定ができるがリーダーへの依存度が高く独裁化のリスクがある' },
+    { type:'essay', text:'ねたいの歴史においてサボり隊との対立と融和が繰り返された原因を分析せよ', answer:'根本的な争点（領土・通貨・権力）が解決されないまま表面的な同盟を結んだため、些細なきっかけで対立が再燃した。合意内容の曖昧さと信頼関係の薄さが繰り返しの原因と考えられる' },
+    { type:'essay', text:'ねたいで長期的に発展するために必要な組織的課題を3つ挙げ、それぞれの改善策を答えよ', answer:'①技術者不足→育成・増員 ②経済停滞→トキ現物化・給付金で活性化 ③国庫不足→租税制度の活用と支出の優先順位付け' },
+    { type:'essay', text:'ねたいで新しい法律を制定する際のプロセスとして理想的な手順を答えよ', answer:'問題点の洗い出し→案の作成→既存法律との矛盾確認→参加者への周知→試験運用→正式採用という段階を踏むことで実効性の高い法律を作れる' },
+    { type:'essay', text:'ねたいの経済において旧人と新人の格差を放置した場合、長期的にどのような影響が生じるか答えよ', answer:'新人が経済活動に参加しにくくなり離脱が増える。参加者が減ることで経済規模が縮小し、最終的にねたい全体の活力が失われるリスクがある' },
+    { type:'essay', text:'ねたいが「学校でのエンタメ役」になるための具体的な新規企画を1つ考え、実現可能性と効果を説明せよ', answer:'ねたい内通貨を使ったフリマイベントを定期開催する。参加者が出品・購入を通じて経済活動を体験でき、非参加者の興味も引きやすい。既存の経済制度をそのまま活用できるため実現可能性も高い' },
+    { type:'essay', text:'ねたいの裁判制度が機能するための条件を2つ答えよ', answer:'①法律が明確で参加者全員が理解できる内容であること ②裁判の判決が公正に執行される仕組みが整っていること' },
+    { type:'essay', text:'ねたいの経済活動において「楽しさのループ」が崩れる原因として考えられるものを2つ答えよ', answer:'①取引のハードルが高く楽しさを体験できる機会がない ②参加者が給料を受け取れず経済活動への意欲が失われる' },
+    { type:'essay', text:'ねたいの歴史から学べる「組織運営における失敗のパターン」を1つ挙げ、現在の制度でどのように改善されているか答えよ', answer:'古賀の独裁的運営が優秀なメンバーの離反を招いた。現在はかっしーがリーダーとして運営しつつ、各グループが自律的に活動できる分散型の組織構造を取ることでこれを改善している' },
+    { type:'essay', text:'ねたいの国庫管理において「収入と支出のバランス」を保つための制度設計を答えよ（高配点）', answer:'租税制度で安定的な歳入を確保しつつ、公共事業の支出に優先順位をつける。また会社が自ら稼ぐ制度を段階的に導入して国庫依存を減らすことが重要' },
+    { type:'essay', text:'ねたいが現在抱える経済的課題を複数挙げ、それらの相互関係を分析した上で総合的な解決策を提案せよ（高配点）', answer:'国庫不足・技術者不足・経済停滞という3つの課題は相互に関連している。解決には①租税制度の安定運用②技術者の育成③トキ現物化による経済活性化を同時並行で進めることが必要' },
+    { type:'essay', text:'ねたいの制度を参考に、現実の国家経済との共通点と相違点を分析せよ（高配点）', answer:'共通点は通貨・税金・法律・警察・裁判所など基本的な経済・司法制度を持つ点。相違点は規模が小さく参加者全員が顔見知りであるため信頼関係に依存した運営が可能な点、また先生という外部権力による制約がある点' },
+    { type:'essay', text:'ねたいが10年後も持続的に発展するために必要な長期的戦略を答えよ（高配点）', answer:'技術者の育成と制度の文書化によって特定個人への依存を減らす。また新人への教育制度を整備して知識の継承を図る。さらに学校のエンタメ役として非参加者にも魅力を伝え参加者を増やし続けることで組織の活力を維持する' },
+    { type:'essay', text:'ねたいの歴史全体を通じて「組織が発展するために必要な要素」を3つ挙げ、それぞれねたいの事例を用いて説明せよ（高配点）', answer:'①民主的な意思決定→古賀の独裁からかっしーへの移行で組織が安定した ②経済的インセンティブ→給料・通貨制度が参加者の活動意欲を維持した ③秩序の維持→法律・警察・裁判制度が経済活動の公正性を担保した' },
+    { type:'essay', text:'あなたがねたいの運営に参加するとしたら、現在の課題に対してどのような新しい制度や仕組みを提案するか。具体的かつ実現可能な案を答えよ（高配点）', answer:'技術者育成プログラムとして、興味のある参加者に簡単なシステム管理作業から段階的に経験を積ませる制度を導入する。また経済活動の活性化のために月1回のねたい内フリマを開催し、トキの流通量を増やすことで取引の楽しさを広める' },
+  ]
+};
+
+// ===== STATE =====
+let selectedGrade = null;
+let userName = '';
+let questions = [];
+let currentQ = 0;
+let answers = [];
+let cheatCount = 0;
+const MAX_CHEAT = 3;
+let examActive = false;
+
+// ===== UI =====
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzEVA4XatMUlLTlkiRk-lFMp4hOWWt2EtaT5UyBqzWXiMIceKXHi2My2uSEX1va2OyI/exec';
+function selectGrade(g) {
+  selectedGrade = g;
+  document.querySelectorAll('.grade-card').forEach((c,i) => {
+    c.classList.toggle('selected', (5-i) === g);
+  });
+  updateStartBtn();
+}
+
+function updateStartBtn() {
+  const name = document.getElementById('name-input').value.trim();
+  const isAdmin = name === 'netaigr2024';
+  document.getElementById('start-btn').disabled = !(isAdmin || (selectedGrade && name));
+}
+
+function startExam() {
+  userName = document.getElementById('name-input').value.trim();
+
+  if (userName === 'netaigr2024') {
+    document.getElementById('top-page').style.display = 'none';
+    document.getElementById('admin-page').style.display = 'block';
+    renderAdminList();
+    return;
+  }
+
+  questions = QUESTIONS[selectedGrade];
+  answers = new Array(questions.length).fill(null);
+  currentQ = 0;
+  cheatCount = 0;
+  examActive = true;
+
+  document.getElementById('top-page').style.display = 'none';
+  document.getElementById('exam-page').style.display = 'block';
+  document.getElementById('exam-title-label').textContent = `ねたい検定 ${selectedGrade}級`;
+
+  renderQuestion();
+  setupCheatDetection();
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const total = questions.length;
+  const pct = ((currentQ + 1) / total * 100).toFixed(0);
+
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentQ+1} / ${total}`;
+
+  const wrap = document.getElementById('question-wrap');
+
+  if (q.type === 'choice') {
+    const labels = ['A','B','C','D'];
+    wrap.innerHTML = `
+      <div class="q-number">問 ${currentQ+1} <span class="q-type-badge">選択</span></div>
+      <div class="q-text">${q.text}</div>
+      <div class="choices">
+        ${q.choices.map((c,i) => `
+          <button class="choice-btn ${answers[currentQ] === i ? 'selected' : ''}"
+            onclick="selectChoice(${i})">
+            <span class="choice-label">${labels[i]}</span>
+            <span>${c}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <div class="q-number">問 ${currentQ+1} <span class="q-type-badge">記述</span></div>
+      <div class="q-text">${q.text}</div>
+      <div class="essay-wrap">
+        <textarea placeholder="ここに答えを記述してください..." oninput="saveEssay(this.value)">${answers[currentQ] || ''}</textarea>
+        <div class="essay-hint">※ 記述問題は採点者が確認します</div>
+      </div>
+    `;
+  }
+
+  // nav
+  document.getElementById('prev-btn').disabled = currentQ === 0;
+  const isLast = currentQ === total - 1;
+  document.getElementById('next-btn').style.display = isLast ? 'none' : 'inline-block';
+  document.getElementById('submit-btn').style.display = isLast ? 'inline-block' : 'none';
+}
+
+function selectChoice(i) {
+  answers[currentQ] = i;
+  renderQuestion();
+}
+
+function saveEssay(val) {
+  answers[currentQ] = val;
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+function nextQ() {
+  if (currentQ < questions.length - 1) { currentQ++; renderQuestion(); }
+}
+
+function submitExam() {
+  examActive = false;
+  removeCheatDetection();
+  showResult();
+}
+
+// ===== CHEAT DETECTION =====
+function setupCheatDetection() {
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('blur', onWindowBlur);
+  document.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function removeCheatDetection() {
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('blur', onWindowBlur);
+}
+
+function onVisibilityChange() {
+  if (!examActive) return;
+  if (document.hidden) triggerCheat();
+}
+
+function onWindowBlur() {
+  if (!examActive) return;
+  triggerCheat();
+}
+
+function triggerCheat() {
+  cheatCount++;
+  updateCheatCounter();
+
+  if (cheatCount >= MAX_CHEAT) {
+    examActive = false;
+    removeCheatDetection();
+    document.getElementById('cheat-overlay').classList.remove('show');
+    document.getElementById('exam-page').style.display = 'none';
+    const tp = document.getElementById('terminated-page');
+    tp.style.display = 'flex';
+    return;
+  }
+
+  const remaining = MAX_CHEAT - cheatCount;
+  document.getElementById('cheat-remaining').textContent = `残り警告: ${remaining}回`;
+  document.getElementById('cheat-overlay').classList.add('show');
+}
+
+function dismissCheat() {
+  document.getElementById('cheat-overlay').classList.remove('show');
+}
+
+function updateCheatCounter() {
+  const el = document.getElementById('cheat-counter');
+  el.textContent = `離脱: ${cheatCount}/${MAX_CHEAT}`;
+  el.className = cheatCount > 0 ? 'cheat-counter' : 'cheat-counter safe';
+}
+
+// ===== RESULT =====
+async function showResult() {
+  document.getElementById('exam-page').style.display = 'none';
+  document.getElementById('result-page').style.display = 'block';
+
+  document.getElementById('result-grade-label').textContent = `ねたい実用検定 ${selectedGrade}級`;
+  document.getElementById('result-name-label').textContent = `${userName} さんの結果`;
+
+  // スコア欄は非表示
+  document.getElementById('result-score').style.display = 'none';
+
+  const verdict = document.getElementById('result-verdict');
+  verdict.textContent = '受験完了！後日、採点結果の紙をお渡しします。';
+  verdict.className = 'result-verdict';
+  verdict.style.color = 'var(--blue)';
+
+  if (cheatCount > 0) {
+    const cw = document.getElementById('cheat-warning-result');
+    cw.style.display = 'block';
+    cw.textContent = `⚠️ 試験中に ${cheatCount} 回の離脱が検知されました`;
+  }
+
+  // 受験データ保存
+  await saveResult();
+
+  // review（受験者には回答のみ表示、正誤・参考答案は非表示）
+  const list = document.getElementById('review-list');
+  list.innerHTML = questions.map((q, i) => {
+    if (q.type === 'choice') {
+      const labels = ['A','B','C','D'];
+      const userAns = answers[i];
+      const userLabel = userAns !== null ? labels[userAns] : '未回答';
+      return `
+        <div class="review-item">
+          <div class="review-q-num">問${i+1}（選択）</div>
+          <div class="review-q-text">${q.text}</div>
+          <div class="review-answer-row">
+            <span style="color:var(--blue)">あなたの回答: ${userLabel}）${userAns !== null ? q.choices[userAns] : '未回答'}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="review-item essay">
+          <div class="review-q-num">問${i+1}（記述）</div>
+          <div class="review-q-text">${q.text}</div>
+          <div class="review-answer-row">
+            <span style="color:var(--blue)">あなたの回答: ${answers[i] || '（未記入）'}</span>
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
+}
+
+// ===== データ保存 =====
+async function saveResult() {
+  const record = {
+    id: Date.now(),
+    name: userName,
+    grade: selectedGrade,
+    date: new Date().toLocaleString('ja-JP'),
+    cheatCount,
+    answers: answers.map((a, i) => {
+      const q = questions[i];
+      if (q.type === 'choice') {
+        const labels = ['A','B','C','D'];
+        return {
+          type: 'choice',
+          q: q.text,
+          userAns: a !== null ? `${labels[a]}）${q.choices[a]}` : '未回答',
+          correctAns: `${labels[q.answer]}）${q.choices[q.answer]}`,
+          correct: a === q.answer
+        };
+      } else {
+        return {
+          type: 'essay',
+          q: q.text,
+          userAns: a || '（未記入）',
+          refAns: q.answer
+        };
+      }
+    })
+  };
+
+  try {
+    const response = await fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'add', result: record })
+    });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || data.message);
+  } catch (error) {
+    console.error('結果保存エラー:', error);
+    alert('結果の保存に失敗しました。\nインターネット接続を確認してください。');
+  }
+}
+
+// ===== 管理者ページ =====
+// ===== 管理者ページ =====
+function openAdmin() {
+  const pw = prompt('管理者パスワードを入力してください');
+  if (pw !== 'netaigr2024') {
+    alert('パスワードが違います');
+    return;
+  }
+  document.getElementById('top-page').style.display = 'none';
+  document.getElementById('admin-page').style.display = 'block';
+  renderAdminList();
+}
+
+async function renderAdminList() {
+  try {
+    const response = await fetch(GAS_API_URL);
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || '結果取得に失敗しました');
+
+    const results = data.results;
+    const container = document.getElementById('admin-list');
+
+    if (results.length === 0) {
+      container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:2rem;">まだ受験データがありません</div>';
+      return;
+    }
+
+    // 新しい順
+    const sorted = [...results].reverse();
+
+    container.innerHTML = sorted.map(r => {
+      const choiceAns = r.answers.filter(a => a.type === 'choice');
+      const correct = choiceAns.filter(a => a.correct).length;
+      const total = choiceAns.length;
+
+      return `
+        <div class="admin-card" onclick="toggleDetail(${r.id})">
+          <div class="admin-card-header">
+            <div>
+              <span class="admin-name">${r.name}</span>
+              <span class="admin-grade">${r.grade}級</span>
+              ${r.cheatCount > 0 ? `<span class="admin-cheat">離脱${r.cheatCount}回</span>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <span style="font-size:0.8rem;color:var(--muted);">${r.date}</span>
+              <span style="font-size:0.85rem;color:var(--gold);font-weight:700;">選択 ${correct}/${total}</span>
+            </div>
+          </div>
+          <div class="admin-detail" id="detail-${r.id}" style="display:none;">
+            ${r.answers.map((a, i) => {
+              if (a.type === 'choice') {
+                return `
+                  <div class="admin-ans-row ${a.correct ? 'correct' : 'wrong'}">
+                    <div class="admin-ans-q">問${i+1}（選択）${a.q}</div>
+                    <div class="admin-ans-user">回答: ${a.userAns}</div>
+                    ${!a.correct ? `<div class="admin-ans-correct">正解: ${a.correctAns}</div>` : ''}
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="admin-ans-row essay">
+                    <div class="admin-ans-q">問${i+1}（記述）${a.q}</div>
+                    <div class="admin-ans-user">回答: ${a.userAns}</div>
+                    <div class="admin-ans-ref">参考答案: ${a.refAns}</div>
+                  </div>
+                `;
+              }
+            }).join('')}
+            <button class="delete-btn" onclick="deleteResult(event, ${r.id})">この記録を削除</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    console.error('結果取得エラー:', error);
+    alert('結果データを取得できませんでした。\n' + error.message);
+  }
+}
+
+function toggleDetail(id) {
+  const el = document.getElementById(`detail-${id}`);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function deleteResult(e, id) {
+  e.stopPropagation();
+  if (!confirm('この記録を削除しますか？')) return;
+
+  try {
+    const response = await fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'delete', id: id })
+    });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || data.message);
+    await renderAdminList();
+  } catch (error) {
+    console.error('削除エラー:', error);
+    alert('結果の削除に失敗しました。\n' + error.message);
+  }
+}
+
+function closeAdmin() {
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('top-page').style.display = 'flex';
+}
+
+function backToTop() {
+  document.getElementById('result-page').style.display = 'none';
+  document.getElementById('terminated-page').style.display = 'none';
+  document.getElementById('top-page').style.display = 'flex';
+  document.querySelectorAll('.grade-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('name-input').value = '';
+  document.getElementById('start-btn').disabled = true;
+  selectedGrade = null;
+  examActive = false;
+}
+</script>
+</body>
+</html>
